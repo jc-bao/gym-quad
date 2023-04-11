@@ -80,6 +80,7 @@
         </intertial>
     </link>
 
+    <!-- 8 -->
     <link name="cf1">
         <inertial>
             <origin rpy="0 0 0" xyz="0 0 0" />
@@ -129,6 +130,7 @@
         </intertial>
     </link>
 
+    <!-- 12 -->
     <link name="cf2">
         <inertial>
             <origin rpy="0 0 0" xyz="0 0 0" />
