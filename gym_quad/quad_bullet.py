@@ -32,7 +32,6 @@ class PIDController:
         self.integral = np.clip(self.integral, -self.ki_max, self.ki_max)
         derivative = (error - self.last_error) / dt
         self.last_error = error
-        ic(self.kp * error, self.ki * self.integral, self.kd * derivative)
         return self.kp * error + self.ki * self.integral + self.kd * derivative
 
 class QuadBullet(gym.Env):
@@ -49,7 +48,7 @@ class QuadBullet(gym.Env):
 
         # Initialize pybullet
         self.CLIENT = p.connect(p.DIRECT)
-        p.setGravity(0, 0, 0.0)
+        p.setGravity(0, 0, -9.81)
         # set simulator parameters
         self.sim_dt = 4e-4
         self.ctl_substeps = 5
@@ -108,12 +107,9 @@ class QuadBullet(gym.Env):
         # convert action to rpm
         thrust = action[0]
         target_rpy_rate = action[1:]
-        # run lower level attitude rate PID controller
-        rpy_rate_error = target_rpy_rate - self.vrpy_drone
-        torque = self.controller.update(rpy_rate_error, self.ctl_dt)
 
         for _ in range(self.step_substeps):
-            self.ctlstep(thrust, torque)
+            self.ctlstep(thrust, target_rpy_rate)
 
         # Get state
         state = self._get_state()
@@ -130,7 +126,10 @@ class QuadBullet(gym.Env):
 
         return obs, reward, done, info
     
-    def ctlstep(self, thrust, torque):
+    def ctlstep(self, thrust, target_rpy_rate):
+        # run lower level attitude rate PID controller
+        rpy_rate_error = target_rpy_rate - self.vrpy_drone
+        torque = self.controller.update(rpy_rate_error, self.ctl_dt)
         thrust, torque = np.clip(thrust, 0.0, self.max_thrust), np.clip(torque, -self.max_torque, self.max_torque)
         for _ in range(self.ctl_substeps):
             self.simstep(thrust, torque)
@@ -154,8 +153,6 @@ class QuadBullet(gym.Env):
         # Step simulation
         p.stepSimulation()
 
-        return self._get_state()
-
     def _get_state(self) -> np.ndarray:
         """
         Get state of the quadrotor
@@ -163,11 +160,13 @@ class QuadBullet(gym.Env):
 
         self.xyz_drone, self.quat_drone, _, _, _, _, self.vxyz_drone, self.vrpy_drone = p.getLinkState(self.quad, 0, 1)
         self.rpy_drone = p.getEulerFromQuaternion(self.quat_drone)
+        self.rotmat_drone = np.array(p.getMatrixFromQuaternion(self.quat_drone)).reshape(3, 3)
 
         return {
             'xyz_drone': self.xyz_drone,
             'quat_drone': self.quat_drone,
             'rpy_drone': self.rpy_drone,
+            'rotmat_drone': self.rotmat_drone,
             'vxyz_drone': self.vxyz_drone,
             'vrpy_drone': self.vrpy_drone, 
             'thrust': self.thrust,
@@ -191,7 +190,7 @@ class Logger:
         # create figure
         fig, axs = plt.subplots(len(self.log_items), 1, figsize=(10, 3*len(self.log_items)))
         # plot
-        x_time = np.arange(len(self.log_dict[self.log_items[0]])) * 4e-4
+        x_time = np.arange(len(self.log_dict[self.log_items[0]])) / 500.0
         for i, item in enumerate(self.log_items):
             axs[i].plot(x_time, self.log_dict[item])
             axs[i].set_title(item)
@@ -202,13 +201,18 @@ def test():
     logger = Logger()
     env = QuadBullet()
     state = env.reset()
-    for _ in range(50):
-        rpy_rate_error = np.array([0.0, 0.0, 2.0]) - env.vrpy_drone
-        torque = env.controller.update(rpy_rate_error, env.ctl_dt)
-        thrust = 0.0
-        thrust, torque = np.clip(thrust, 0.0, env.max_thrust), np.clip(torque, -env.max_torque, env.max_torque)
-        for _ in range(env.ctl_substeps):
-            state = env.simstep(thrust, torque)
+    target_pos = np.array([0.0, 0.0, 1.0])
+    pos_controller = PIDController(np.ones(3)*0.55, np.ones(3)*0.2, np.ones(3)*0.15, np.ones(3)*100.0)
+    attitude_controller = PIDController(np.array([4.0, 4.0, 4.0]), np.array([0.0, 0.0, 0.0]), np.array([0.0, 0.0, 0.0]), np.ones(3)*100.0)
+    pos_controller.reset()
+    for _ in range(20):
+        target_force = pos_controller.update(target_pos - state['xyz_drone'], env.step_dt) + np.array([0.0, 0.0, 9.81*0.027])
+        thrust = np.dot(target_force, state['rotmat_drone'])[2]
+        roll_target = np.arctan2(-target_force[1], np.sqrt(target_force[0]**2 + target_force[2]**2))*0.0
+        pitch_target = np.arctan2(target_force[0], target_force[2])*0.0
+        rpy_rate_target = attitude_controller.update(np.array([roll_target, pitch_target, 0.0]) - state['rpy_drone'], env.step_dt)
+        for _ in range(env.step_substeps):
+            state = env.ctlstep(thrust, rpy_rate_target)
             logger.log(state)
     logger.plot('results/test.png')
 
