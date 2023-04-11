@@ -8,6 +8,10 @@ The environment is a 3D quadrotor with 4 rotors. The rotors are controlled by a 
 
 The main feature is that the quadrotor is hanging an object by a free joint. The object can be moved by the quadrotor. The object can also be moved by an external force. 
 
+|Visualization|Plot|
+|-|-|
+|![tmp](https://user-images.githubusercontent.com/60093981/231089933-e11f9e6c-9e10-406a-aed5-109ce2881d8a.gif)|<img width="240" alt="image" src="https://user-images.githubusercontent.com/60093981/231090020-a05d8195-8609-44b8-b51e-8c0dde97ab9d.png">|
+
 ## Installation
 
 ```bash
