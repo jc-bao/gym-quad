@@ -71,6 +71,9 @@ class QuadBullet(gym.Env):
         self.quad = p.loadURDF("assets/cf2x_dual.urdf", [0, 0, 0.5])
         # get joint number
         self.num_joints = p.getNumJoints(self.quad)
+        # get all link information
+        self.link_info = [p.getDynamicsInfo(self.quad, i) for i in range(self.num_joints)]
+        print(self.link_info)
 
         # Set up action and observation spaces
         self.action_space = gym.spaces.Box(low=-1, high=1, shape=(4,))
