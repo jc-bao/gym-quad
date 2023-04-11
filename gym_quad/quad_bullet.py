@@ -201,7 +201,7 @@ def test():
     logger = Logger()
     env = QuadBullet()
     state = env.reset()
-    target_pos = np.array([0.0, 0.0, 1.0])
+    target_pos = np.array([1.0, 1.0, 1.0])
     pos_controller = PIDController(np.ones(3)*0.55, np.ones(3)*0.1, np.ones(3)*0.15, np.ones(3)*100.0)
     attitude_controller = PIDController(np.ones(3)*8.0, np.ones(3)*0.1, np.ones(3)*0.10, np.ones(3)*100.0)
     pos_controller.reset()
