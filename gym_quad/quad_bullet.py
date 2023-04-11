@@ -63,7 +63,7 @@ class QuadBullet(gym.Env):
         p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
         # set camera pose
         p.resetDebugVisualizerCamera(cameraDistance=1.5,
-                                        cameraYaw=0,
+                                        cameraYaw=45,
                                         cameraPitch=-30,
                                         cameraTargetPosition=[0, 0, 0])
 
@@ -85,6 +85,7 @@ class QuadBullet(gym.Env):
         # reset
         self.thrust = 0.0
         self.torque = np.zeros(3)
+        self.target_rpy_rate = np.zeros(3)
         self.reset()
 
     def reset(self) -> np.ndarray:
@@ -151,6 +152,15 @@ class QuadBullet(gym.Env):
                             flags=p.LINK_FRAME,
                             physicsClientId=self.CLIENT
                             )
+        # set zero joint force
+        for i in range(2,4):
+            p.setJointMotorControl2(self.quad,
+                                    i,
+                                    p.VELOCITY_CONTROL,
+                                    targetVelocity=0,
+                                    force=0,
+                                    physicsClientId=self.CLIENT
+                                    )
         # Step simulation
         p.stepSimulation()
 
@@ -170,6 +180,7 @@ class QuadBullet(gym.Env):
             'rotmat_drone': self.rotmat_drone,
             'vxyz_drone': self.vxyz_drone,
             'vrpy_drone': self.vrpy_drone, 
+            'vrpy_drone_error': self.target_rpy_rate - self.vrpy_drone,
             'thrust': self.thrust,
             'torque': self.torque, 
             'thrust_normed': self.thrust/self.max_thrust,
@@ -178,7 +189,7 @@ class QuadBullet(gym.Env):
 
 class Logger:
     def __init__(self) -> None:
-        self.log_items = ['xyz_drone', 'rpy_drone', 'vxyz_drone', 'vrpy_drone', 'thrust_normed', 'torque_normed']
+        self.log_items = ['xyz_drone', 'rpy_drone', 'vxyz_drone', 'vrpy_drone', 'thrust_normed', 'torque_normed', 'vrpy_drone_error']
         self.log_dict = {item: [] for item in self.log_items}
     
     def log(self, state):
@@ -202,13 +213,21 @@ def test():
     logger = Logger()
     env = QuadBullet()
     state = env.reset()
-    target_pos = np.array([0.6, 1.0, 0.8])
-    pos_controller = PIDController(np.ones(3)*0.05, np.ones(3)*0.08, np.ones(3)*0.15, np.ones(3)*100.0)
+    target_pos = np.array([0.0, 0.0, 0.5])
+    pos_controller = PIDController(np.ones(3)*0.03, np.ones(3)*0.01, np.ones(3)*0.06, np.ones(3)*100.0)
     attitude_controller = PIDController(np.ones(3)*7.0, np.ones(3)*0.1, np.ones(3)*0.05, np.ones(3)*100.0)
     pos_controller.reset()
-    for _ in range(50):
+    for i in range(50):
+        if i == 0:
+            p.applyExternalForce(env.quad,
+                                    3,
+                                    forceObj=[20.0, 20.0, 0.0],
+                                    posObj=[0, 0, 0],
+                                    flags=p.LINK_FRAME,
+                                    physicsClientId=env.CLIENT
+                                    )
         delta_pos = np.clip(target_pos - state['xyz_drone'], -0.2, 0.2)
-        target_force = pos_controller.update(delta_pos, env.step_dt) + np.array([0.0, 0.0, 9.81*0.027])
+        target_force = pos_controller.update(delta_pos, env.step_dt) + np.array([0.0, 0.0, 9.81*0.037])
         thrust = np.dot(target_force, state['rotmat_drone'])[2]
         roll_target = np.arctan2(-target_force[1], np.sqrt(target_force[0]**2 + target_force[2]**2))
         pitch_target = np.arctan2(target_force[0], target_force[2])
