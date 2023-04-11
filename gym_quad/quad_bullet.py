@@ -201,9 +201,9 @@ def test():
     logger = Logger()
     env = QuadBullet()
     state = env.reset()
-    target_pos = np.array([0.0, 0.0, 1.0])
+    target_pos = np.array([0.0, 0.0, 0.0])
     pos_controller = PIDController(np.ones(3)*0.55, np.ones(3)*0.2, np.ones(3)*0.15, np.ones(3)*100.0)
-    attitude_controller = PIDController(np.array([4.0, 4.0, 4.0]), np.array([0.0, 0.0, 0.0]), np.array([0.0, 0.0, 0.0]), np.ones(3)*100.0)
+    attitude_controller = PIDController(np.ones(3)*4.0, np.ones(3)*0.0, np.ones(3)*0.0, np.ones(3)*100.0)
     pos_controller.reset()
     for _ in range(20):
         target_force = pos_controller.update(target_pos - state['xyz_drone'], env.step_dt) + np.array([0.0, 0.0, 9.81*0.027])
