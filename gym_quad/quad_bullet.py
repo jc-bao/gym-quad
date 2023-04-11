@@ -47,7 +47,7 @@ class QuadBullet(gym.Env):
         self.max_thrust = 0.60
 
         # Initialize pybullet
-        self.CLIENT = p.connect(p.DIRECT)
+        self.CLIENT = p.connect(p.GUI)
         p.setGravity(0, 0, -9.81)
         # set simulator parameters
         self.sim_dt = 4e-4
@@ -128,6 +128,7 @@ class QuadBullet(gym.Env):
     
     def ctlstep(self, thrust, target_rpy_rate):
         # run lower level attitude rate PID controller
+        self.target_rpy_rate = target_rpy_rate
         rpy_rate_error = target_rpy_rate - self.vrpy_drone
         torque = self.controller.update(rpy_rate_error, self.ctl_dt)
         thrust, torque = np.clip(thrust, 0.0, self.max_thrust), np.clip(torque, -self.max_torque, self.max_torque)
@@ -201,12 +202,13 @@ def test():
     logger = Logger()
     env = QuadBullet()
     state = env.reset()
-    target_pos = np.array([1.0, 1.0, 1.0])
-    pos_controller = PIDController(np.ones(3)*0.55, np.ones(3)*0.1, np.ones(3)*0.15, np.ones(3)*100.0)
-    attitude_controller = PIDController(np.ones(3)*8.0, np.ones(3)*0.1, np.ones(3)*0.10, np.ones(3)*100.0)
+    target_pos = np.array([0.6, 1.0, 0.8])
+    pos_controller = PIDController(np.ones(3)*0.05, np.ones(3)*0.08, np.ones(3)*0.15, np.ones(3)*100.0)
+    attitude_controller = PIDController(np.ones(3)*7.0, np.ones(3)*0.1, np.ones(3)*0.05, np.ones(3)*100.0)
     pos_controller.reset()
-    for _ in range(20):
-        target_force = pos_controller.update(target_pos - state['xyz_drone'], env.step_dt) + np.array([0.0, 0.0, 9.81*0.027])
+    for _ in range(50):
+        delta_pos = np.clip(target_pos - state['xyz_drone'], -0.2, 0.2)
+        target_force = pos_controller.update(delta_pos, env.step_dt) + np.array([0.0, 0.0, 9.81*0.027])
         thrust = np.dot(target_force, state['rotmat_drone'])[2]
         roll_target = np.arctan2(-target_force[1], np.sqrt(target_force[0]**2 + target_force[2]**2))
         pitch_target = np.arctan2(target_force[0], target_force[2])
@@ -214,6 +216,7 @@ def test():
         for _ in range(env.step_substeps):
             state = env.ctlstep(thrust, rpy_rate_target)
             logger.log(state)
+            time.sleep(env.ctl_dt)
     logger.plot('results/test.png')
 
 if __name__ == "__main__":
