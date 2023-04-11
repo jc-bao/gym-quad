@@ -214,11 +214,16 @@ def test():
     env = QuadBullet()
     state = env.reset()
     target_pos = np.array([0.0, 0.0, 0.5])
+
+    # set up controllers
     pos_controller = PIDController(np.ones(3)*0.03, np.ones(3)*0.01, np.ones(3)*0.06, np.ones(3)*100.0)
     attitude_controller = PIDController(np.ones(3)*7.0, np.ones(3)*0.1, np.ones(3)*0.05, np.ones(3)*100.0)
     pos_controller.reset()
+    attitude_controller.reset()
+
     for i in range(50):
         if i == 0:
+            # give the object an initial velocity
             p.applyExternalForce(env.quad,
                                     3,
                                     forceObj=[20.0, 20.0, 0.0],
