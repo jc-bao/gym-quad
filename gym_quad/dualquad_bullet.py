@@ -68,7 +68,7 @@ class QuadBullet(gym.Env):
                                         cameraTargetPosition=[0, 0, 0])
 
         # Load quadrotor
-        self.quad = p.loadURDF("assets/cf2x.urdf", [0, 0, 0.5])
+        self.quad = p.loadURDF("assets/cf2x_dual.urdf", [0, 0, 0.5])
         # get joint number
         self.num_joints = p.getNumJoints(self.quad)
 

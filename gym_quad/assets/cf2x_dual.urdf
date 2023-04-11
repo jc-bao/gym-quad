@@ -1,0 +1,247 @@
+<?xml version="1.0"?>
+
+<robot name="cf2_dual">
+    <link name="obj">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <mass value="0.01" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <geometry>
+                <sphere radius=".01" />
+            </geometry>
+        </collision>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <geometry>
+                <sphere radius=".01" />
+            </geometry>
+            <material name="red">
+                <color rgba="1.0 0.0 0.0 1.0" />
+            </material>
+        </visual>
+    </link>
+
+    <link name="obj_left">
+        <intertial>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </intertial>
+    </link>
+
+    <link name="obj_left_up">
+        <intertial>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </intertial>
+    </link>
+
+    <link name="obj_right">
+        <intertial>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </intertial>
+    </link>
+
+    <link name="obj_right_up">
+        <intertial>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </intertial>
+    </link>
+    
+    <link name="cf1_down">
+        <intertial>
+            <origin rpy="0 0 0" xyz="0.0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </intertial>
+    </link>
+
+    <link name="cf1_mid">
+        <intertial>
+            <origin rpy="0 0 0" xyz="0.0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </intertial>
+    </link>
+
+    <link name="cf1_hook">
+        <intertial>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </intertial>
+    </link>
+
+    <link name="cf1">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <mass value="0.027" />
+            <inertia ixx="1.7e-5" ixy="0.0" ixz="0.0" iyy="1.7e-5" iyz="0.0" izz="2.98e-5" />
+        </inertial>
+
+        <visual>
+            <origin rpy="0 0 55" xyz="0 0 0" />
+            <geometry>
+                <mesh filename="./cf2.dae" scale=" 1 1 1" />
+            </geometry>
+            <material name="grey">
+                <color rgba=".5 .5 .5 1" />
+            </material>
+        </visual>
+
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <cylinder radius=".06" length=".025" />
+            </geometry>
+        </collision>
+    </link>
+
+    <link name="cf2_down">
+        <intertial>
+            <origin rpy="0 0 0" xyz="0.0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </intertial>
+    </link>
+
+    <link name="cf2_mid">
+        <intertial>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </intertial>
+    </link>
+
+    <link name="cf2_hook">
+        <intertial>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </intertial>
+    </link>
+
+    <link name="cf2">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <mass value="0.027" />
+            <inertia ixx="1.7e-5" ixy="0.0" ixz="0.0" iyy="1.7e-5" iyz="0.0" izz="2.98e-5" />
+        </inertial>
+
+        <visual>
+            <origin rpy="0 0 55" xyz="0 0 0" />
+            <geometry>
+                <mesh filename="./cf2.dae" scale=" 1 1 1" />
+            </geometry>
+            <material name="grey">
+                <color rgba=".5 .5 .5 1" />
+            </material>
+        </visual>
+
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <cylinder radius=".06" length=".025" />
+            </geometry>
+        </collision>
+    </link>
+
+    <joint name="obj_left_x" type="revolute">
+        <axis xyz="1 0 0" />
+        <dynamics damping="0.0" friction="0.0"/>
+        <limit lower="-10000" upper="10000" effort="1000.0" velocity="1000.0"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+        <parent link="obj" />
+        <child link="obj_left" />
+    </joint>
+    <joint name="obj_left_y" type="revolute">
+        <axis xyz="0 1 0" />
+        <dynamics damping="0.0" friction="0.0"/>
+        <limit lower="-10000" upper="10000" effort="1000.0" velocity="1000.0"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+        <parent link="obj_left" />
+        <child link="obj_left_up" />
+    </joint>
+    <joint name="obj_left_up_joint" type="fixed">
+        <parent link="obj_left_up" />
+        <child link="cf1_down" />
+        <origin rpy="0.00000 -0.00000 0.00000" xyz="0.15 0.0 0.15"/>
+        <axis xyz="0.00000 0.00000 0.00000"/>
+    </joint>
+    <joint name="cf1_x" type="revolute">
+        <axis xyz="1 0 0" />
+        <dynamics damping="0.0" friction="0.0"/>
+        <limit lower="-10000" upper="10000" effort="1000.0" velocity="1000.0"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+        <parent link="cf1_down" />
+        <child link="cf1_mid" />
+    </joint>
+    <joint name="cf1_y" type="revolute">
+        <axis xyz="0 1 0" />
+        <dynamics damping="0.0" friction="0.0"/>
+        <limit lower="-10000" upper="10000" effort="1000.0" velocity="1000.0"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+        <parent link="cf1_mid" />
+        <child link="cf1_hook" />
+    </joint>
+    <joint name="cf1_fixed" type="fixed">
+        <parent link="cf1_hook" />
+        <child link="cf1" />
+        <origin rpy="0.00000 -0.00000 0.00000" xyz="0.0 0.0 0.03"/>
+		<axis xyz="0.00000 0.00000 0.00000"/>
+    </joint>
+    
+    <joint name="obj_right_x" type="fixed">
+        <axis xyz="1 0 0" />
+        <dynamics damping="0.0" friction="0.0"/>
+        <limit lower="-10000" upper="10000" effort="1000.0" velocity="1000.0"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+        <parent link="obj" />
+        <child link="obj_right" />
+    </joint>
+    <joint name="obj_right_y" type="fixed">
+        <axis xyz="0 1 0" />
+        <dynamics damping="0.0" friction="0.0"/>
+        <limit lower="-10000" upper="10000" effort="1000.0" velocity="1000.0"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+        <parent link="obj_right" />
+        <child link="obj_right_up" />
+    </joint>
+    <joint name="obj_right_up_joint" type="fixed">
+        <parent link="obj_right_up" />
+        <child link="cf2_down" />
+        <origin rpy="0.00000 -0.00000 0.00000" xyz="-0.15 0.0 0.15"/>
+        <axis xyz="0.00000 0.00000 0.00000"/>
+    </joint>
+    <joint name="cf2_x" type="revolute">
+        <axis xyz="1 0 0" />
+        <dynamics damping="0.0" friction="0.0"/>
+        <limit lower="-10000" upper="10000" effort="1000.0" velocity="1000.0"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+        <parent link="cf2_down" />
+        <child link="cf2_mid" />
+    </joint>
+    <joint name="cf2_y" type="revolute">
+        <axis xyz="0 1 0" />
+        <dynamics damping="0.0" friction="0.0"/>
+        <limit lower="-10000" upper="10000" effort="1000.0" velocity="1000.0"/>
+        <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+        <parent link="cf2_mid" />
+        <child link="cf2_hook" />
+    </joint>
+    <joint name="cf2_fixed" type="fixed">
+        <parent link="cf2_hook" />
+        <child link="cf2" />
+        <origin rpy="0.00000 -0.00000 0.00000" xyz="0.0 0.0 0.03"/>
+		<axis xyz="0.00000 0.00000 0.00000"/>
+    </joint>
+
+</robot>
