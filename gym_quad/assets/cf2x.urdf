@@ -94,10 +94,10 @@
     </joint>
 
     <!-- a sphere with weight 0.01kg attach to the end of the rope -->
-    <!-- <link name="rope_end">
+    <link name="rope_end">
         <inertial>
             <origin rpy="0 0 0" xyz="0 0.0 -0.2" />
-            <mass value="0.0001" />
+            <mass value="0.01" />
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
         </inertial>
         <collision>
@@ -141,6 +141,6 @@
         <origin xyz="0 0 0.0" rpy="0 0 0" />
         <parent link="virtual_link0" />
         <child link="rope_end" />
-    </joint> -->
+    </joint>
 
 </robot>
