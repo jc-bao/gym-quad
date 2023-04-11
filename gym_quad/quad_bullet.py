@@ -201,15 +201,15 @@ def test():
     logger = Logger()
     env = QuadBullet()
     state = env.reset()
-    target_pos = np.array([0.0, 0.0, 0.0])
-    pos_controller = PIDController(np.ones(3)*0.55, np.ones(3)*0.2, np.ones(3)*0.15, np.ones(3)*100.0)
-    attitude_controller = PIDController(np.ones(3)*4.0, np.ones(3)*0.0, np.ones(3)*0.0, np.ones(3)*100.0)
+    target_pos = np.array([0.0, 0.0, 1.0])
+    pos_controller = PIDController(np.ones(3)*0.55, np.ones(3)*0.1, np.ones(3)*0.15, np.ones(3)*100.0)
+    attitude_controller = PIDController(np.ones(3)*8.0, np.ones(3)*0.1, np.ones(3)*0.10, np.ones(3)*100.0)
     pos_controller.reset()
     for _ in range(20):
         target_force = pos_controller.update(target_pos - state['xyz_drone'], env.step_dt) + np.array([0.0, 0.0, 9.81*0.027])
         thrust = np.dot(target_force, state['rotmat_drone'])[2]
-        roll_target = np.arctan2(-target_force[1], np.sqrt(target_force[0]**2 + target_force[2]**2))*0.0
-        pitch_target = np.arctan2(target_force[0], target_force[2])*0.0
+        roll_target = np.arctan2(-target_force[1], np.sqrt(target_force[0]**2 + target_force[2]**2))
+        pitch_target = np.arctan2(target_force[0], target_force[2])
         rpy_rate_target = attitude_controller.update(np.array([roll_target, pitch_target, 0.0]) - state['rpy_drone'], env.step_dt)
         for _ in range(env.step_substeps):
             state = env.ctlstep(thrust, rpy_rate_target)
