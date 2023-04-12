@@ -24,3 +24,9 @@ pip install -e .
 cd gym_quad
 python quad_bullet.py
 ```
+
+## TODO
+
+- [ ] Dual drone environment apply force
+- [ ] Soft rope for single drone (multi-link or spring)
+- [ ] More drones pulling a object (3 or more. )

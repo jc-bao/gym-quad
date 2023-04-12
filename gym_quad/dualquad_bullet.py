@@ -242,25 +242,33 @@ def test():
         if i == 0:
             # give the object an initial velocity
             p.applyExternalForce(env.quad,
-                                    5,
+                                    0,
                                     forceObj=[20.0, 20.0, 0.0],
                                     posObj=[0, 0, 0],
                                     flags=p.LINK_FRAME,
                                     physicsClientId=env.CLIENT
                                     )
-        delta_pos = np.clip(target_pos - state['xyz_drone'], -0.2, 0.2)
-        target_force = pos_controller.update(delta_pos, env.step_dt) + np.array([0.0, 0.0, 9.81*0.037])
-        thrust = np.zeros(env.num_drones)
-        rpy_target = np.zeros((env.num_drones, 3))
-        for i in range(env.num_drones):
-            thrust[i] = np.array([np.dot(target_force[i], state['rotmat_drone'][i])[2]])
-            rpy_target[i,0] = np.arctan2(-target_force[i,1], np.sqrt(target_force[i,0]**2 + target_force[i,2]**2))
-            rpy_target[i,1] = np.arctan2(target_force[i,0], target_force[i,2])
-        rpy_rate_target = attitude_controller.update(rpy_target - state['rpy_drone'], env.step_dt)
+        
+        # PID controller
+        # delta_pos = np.clip(target_pos - state['xyz_drone'], -0.2, 0.2)
+        # target_force = pos_controller.update(delta_pos, env.step_dt) + np.array([0.0, 0.0, 9.81*0.037])
+        # thrust = np.zeros(env.num_drones)
+        # rpy_target = np.zeros((env.num_drones, 3))
+        # for i in range(env.num_drones):
+        #     thrust[i] = np.array([np.dot(target_force[i], state['rotmat_drone'][i])[2]])
+        #     rpy_target[i,0] = np.arctan2(-target_force[i,1], np.sqrt(target_force[i,0]**2 + target_force[i,2]**2))
+        #     rpy_target[i,1] = np.arctan2(target_force[i,0], target_force[i,2])
+        # rpy_rate_target = attitude_controller.update(rpy_target - state['rpy_drone'], env.step_dt)
+
+        # Manual control
+        thrust = np.ones(env.num_drones)*0.027*9.81
+        rpy_rate_target = np.zeros((env.num_drones, 3))
+
         for _ in range(env.step_substeps):
             state = env.ctlstep(thrust, rpy_rate_target)
             logger.log(state)
             time.sleep(env.ctl_dt*10)
+
     logger.plot('results/test.png')
 
 if __name__ == "__main__":

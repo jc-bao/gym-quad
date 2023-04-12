@@ -224,17 +224,17 @@ def test():
     attitude_controller.reset()
 
     for i in range(50):
-        if i == 0:
-            # give the object an initial velocity
-            p.applyExternalForce(env.quad,
-                                    3,
-                                    forceObj=[20.0, 20.0, 0.0],
-                                    posObj=[0, 0, 0],
-                                    flags=p.LINK_FRAME,
-                                    physicsClientId=env.CLIENT
-                                    )
+        # if i == 0:
+        #     # give the object an initial velocity
+        #     p.applyExternalForce(env.quad,
+        #                             3,
+        #                             forceObj=[20.0, 20.0, 0.0],
+        #                             posObj=[0, 0, 0],
+        #                             flags=p.LINK_FRAME,
+        #                             physicsClientId=env.CLIENT
+        #                             )
         delta_pos = np.clip(target_pos - state['xyz_drone'], -0.2, 0.2)
-        target_force = pos_controller.update(delta_pos, env.step_dt) + np.array([0.0, 0.0, 9.81*0.037])
+        target_force = pos_controller.update(delta_pos, env.step_dt) + np.array([0.0, 0.0, 9.81*0.027])
         thrust = np.dot(target_force, state['rotmat_drone'])[2]
         roll_target = np.arctan2(-target_force[1], np.sqrt(target_force[0]**2 + target_force[2]**2))
         pitch_target = np.arctan2(target_force[0], target_force[2])
