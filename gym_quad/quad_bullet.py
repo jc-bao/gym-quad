@@ -172,10 +172,13 @@ class QuadBullet(gym.Env):
         """
 
         self.xyz_drone, self.quat_drone, _, _, _, _, self.vxyz_drone, self.vrpy_drone = p.getLinkState(self.quad, 0, 1)
+        self.xyz_obj, self.quat_obj, _, _, _, _, self.vxyz_obj, self.vrpy_obj = p.getLinkState(self.quad, 3, 1)
         self.rpy_drone = p.getEulerFromQuaternion(self.quat_drone)
+        self.rpy_obj = p.getEulerFromQuaternion(self.quat_obj)
         self.rotmat_drone = np.array(p.getMatrixFromQuaternion(self.quat_drone)).reshape(3, 3)
+        self.rotmat_obj = np.array(p.getMatrixFromQuaternion(self.quat_obj)).reshape(3, 3)
 
-        return {
+        state = {
             'xyz_drone': self.xyz_drone,
             'quat_drone': self.quat_drone,
             'rpy_drone': self.rpy_drone,
@@ -183,15 +186,25 @@ class QuadBullet(gym.Env):
             'vxyz_drone': self.vxyz_drone,
             'vrpy_drone': self.vrpy_drone, 
             'vrpy_drone_error': self.target_rpy_rate - self.vrpy_drone,
+            'xyz_obj': self.xyz_obj,
+            'quat_obj': self.quat_obj,
+            'rpy_obj': self.rpy_obj,
+            'rotmat_obj': self.rotmat_obj,
+            'vxyz_obj': self.vxyz_obj,
+            'vrpy_obj': self.vrpy_obj,
             'thrust': self.thrust,
             'torque': self.torque, 
             'thrust_normed': self.thrust/self.max_thrust,
             'torque_normed': self.torque/self.max_torque
         }
+        # convert all to numpy arrays
+        for key in state.keys():
+            state[key] = np.array(state[key])
+        return state
 
 class Logger:
     def __init__(self) -> None:
-        self.log_items = ['xyz_drone', 'rpy_drone', 'vxyz_drone', 'vrpy_drone', 'thrust_normed', 'torque_normed', 'vrpy_drone_error']
+        self.log_items = ['xyz_drone', 'rpy_drone', 'vxyz_drone', 'vrpy_drone', 'thrust_normed', 'torque_normed', 'vrpy_drone_error', 'xyz_drone_error', 'xyz_obj_error', 'rpy_drone_error']
         self.log_dict = {item: [] for item in self.log_items}
     
     def log(self, state):
@@ -215,15 +228,20 @@ def test():
     logger = Logger()
     env = QuadBullet()
     state = env.reset()
-    target_pos = np.array([0.0, 0.0, 0.5])
+    target_pos = np.array([0.3, 0.4, 0.2])
+    # create a sphere with pybullet to visualize the target position
+    target_sphere = p.createVisualShape(p.GEOM_SPHERE, radius=0.03, rgbaColor=[0, 1, 0, 0.5])
+    target_sphere = p.createMultiBody(baseVisualShapeIndex=target_sphere, basePosition=target_pos)
+
 
     # set up controllers
+    objpos_controller = PIDController(np.ones(3)*0.03, np.ones(3)*0.01, np.ones(3)*0.06, np.ones(3)*100.0)
     pos_controller = PIDController(np.ones(3)*0.03, np.ones(3)*0.01, np.ones(3)*0.06, np.ones(3)*100.0)
     attitude_controller = PIDController(np.ones(3)*7.0, np.ones(3)*0.1, np.ones(3)*0.05, np.ones(3)*100.0)
     pos_controller.reset()
     attitude_controller.reset()
 
-    for i in range(50):
+    for _ in range(100):
         # if i == 0:
         #     # give the object an initial velocity
         #     p.applyExternalForce(env.quad,
@@ -233,14 +251,29 @@ def test():
         #                             flags=p.LINK_FRAME,
         #                             physicsClientId=env.CLIENT
         #                             )
-        delta_pos = np.clip(target_pos - state['xyz_drone'], -0.2, 0.2)
-        target_force = pos_controller.update(delta_pos, env.step_dt) + np.array([0.0, 0.0, 9.81*0.027])
-        thrust = np.dot(target_force, state['rotmat_drone'])[2]
-        roll_target = np.arctan2(-target_force[1], np.sqrt(target_force[0]**2 + target_force[2]**2))
-        pitch_target = np.arctan2(target_force[0], target_force[2])
-        rpy_rate_target = attitude_controller.update(np.array([roll_target, pitch_target, 0.0]) - state['rpy_drone'], env.step_dt)
+
+        # PID controller
+        # Object-level controller
+        delta_pos = np.clip(target_pos - state['xyz_obj'], -0.5, 0.5)
+        target_force_obj = objpos_controller.update(delta_pos, env.step_dt) + np.array([0.0, 0.0, 9.81*0.01])
+        xyz_obj2drone = state['xyz_obj'] - state['xyz_drone']
+        z_hat_obj = xyz_obj2drone / np.linalg.norm(xyz_obj2drone)
+        target_force_obj_projected = np.dot(target_force_obj, z_hat_obj) * z_hat_obj
+        # Drone-level controller
+        xyz_drone_target = state['xyz_obj'] + target_force_obj / np.linalg.norm(target_force_obj) * 0.2 + np.array([0.0, 0.0, 0.03]) 
+        target_force_drone = pos_controller.update(xyz_drone_target - state['xyz_drone'], env.step_dt) + np.array([0.0, 0.0, 9.81*0.027]) + target_force_obj_projected
+        thrust = np.dot(target_force_drone, state['rotmat_drone'])[2]
+        roll_target = np.arctan2(-target_force_drone[1], np.sqrt(target_force_drone[0]**2 + target_force_drone[2]**2))
+        pitch_target = np.arctan2(target_force_drone[0], target_force_drone[2])
+        rpy_drone_target = np.array([roll_target, pitch_target, 0.0])
+        rpy_rate_target = attitude_controller.update(rpy_drone_target - state['rpy_drone'], env.step_dt)
+
         for _ in range(env.step_substeps):
             state = env.ctlstep(thrust, rpy_rate_target)
+            # Extra logging term
+            state['xyz_drone_error'] = xyz_drone_target - state['xyz_drone']
+            state['xyz_obj_error'] = target_pos - state['xyz_obj']
+            state['rpy_drone_error'] = rpy_drone_target - state['rpy_drone']
             logger.log(state)
             time.sleep(env.ctl_dt)
     logger.plot('results/test.png')
