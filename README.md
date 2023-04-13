@@ -11,6 +11,7 @@ The main feature is that the quadrotor is hanging an object by a free joint. The
 |Visualization|Multi Quad|Plot|
 |-|-|-|
 |![tmp](https://user-images.githubusercontent.com/60093981/231089933-e11f9e6c-9e10-406a-aed5-109ce2881d8a.gif)|![multi-quad](https://user-images.githubusercontent.com/60093981/231121359-4737dba0-174a-4285-b6b0-fc08b68af92f.gif)|<img width="240" alt="image" src="https://user-images.githubusercontent.com/60093981/231090020-a05d8195-8609-44b8-b51e-8c0dde97ab9d.png">|
+|Bi-level PID Controller ![](https://p.ipic.vip/2uqqtj.gif) Limitation: sensitive to object mass, large control error. |||
 
 ## Installation
 
