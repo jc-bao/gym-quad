@@ -75,7 +75,8 @@ class QuadBullet(gym.Env):
                                      cameraTargetPosition=[0, 0, 0])
 
         # Load quadrotor
-        self.quad = p.loadURDF("assets/cf2x.urdf", [0, 0, 0.5])
+        # self.quad = p.loadURDF("assets/cf2x.urdf", [0, 0, 0.5])
+        self.quad = p.loadURDF("assets/cf2x_addrope.urdf", [0, 0, 0.5])
         # get joint number
         self.num_joints = p.getNumJoints(self.quad)
 
@@ -279,6 +280,8 @@ def test():
             objpos_controller.update(
                 delta_pos, env.step_dt) + np.array([0.0, 0.0, 9.81*env.obj_mass])
         xyz_obj2drone = state['xyz_obj'] - state['xyz_drone']
+        # print("xyz_obj",state['xyz_obj'], "xyz_drone", state['xyz_drone'])
+        # print("xyz_obj2drone", xyz_obj2drone)
         z_hat_obj = xyz_obj2drone / np.linalg.norm(xyz_obj2drone)
         target_force_obj_projected = np.dot(
             target_force_obj, z_hat_obj) * z_hat_obj
