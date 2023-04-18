@@ -111,15 +111,15 @@
             <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
         </inertial>
         <collision>
-            <origin xyz="0 0 -0.045" rpy="0 0 0" />
+            <origin xyz="0 0 -0.025" rpy="0 0 0" />
             <geometry>
-                <cylinder length="0.09" radius="0.0001" />
+                <cylinder length="0.05" radius="0.0001" />
             </geometry>
         </collision>
         <visual>
-            <origin xyz="0 0 -0.045" rpy="0 0 0" />
+            <origin xyz="0 0 -0.025" rpy="0 0 0" />
             <geometry>
-                <cylinder length="0.09" radius="0.0001" />
+                <cylinder length="0.05" radius="0.0001" />
             </geometry>
             <material name="green">
                 <color rgba="0.0 1.0 0.0 1.0" />
@@ -136,12 +136,74 @@
         <child link="link2" />
     </joint>
 
+    <link name="link3">
+        <inertial>
+            <mass value="0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+        <collision>
+            <origin xyz="0 0 -0.025" rpy="0 0 0" />
+            <geometry>
+                <cylinder length="0.05" radius="0.0001" />
+            </geometry>
+        </collision>
+        <visual>
+            <origin xyz="0 0 -0.025" rpy="0 0 0" />
+            <geometry>
+                <cylinder length="0.05" radius="0.0001" />
+            </geometry>
+            <material name="blue">
+                <color rgba="0.0 0.0 1.0 1.0" />
+            </material>
+        </visual>
+    </link>
+
+    <joint name="joint3" type="revolute">
+        <axis xyz="1 1 0" />
+        <dynamics damping="0.0" friction="0.0" />
+        <limit lower="-10000" upper="10000" effort="1000.0" velocity="1000.0" />
+        <origin xyz="0.0 0.0 -0.05" rpy="0 0 0" />
+        <parent link="link2" />
+        <child link="link3" />
+    </joint>
+
+    <!-- <link name="link4">
+        <inertial>
+            <mass value="0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+        <collision>
+            <origin xyz="0 0 -0.02" rpy="0 0 0" />
+            <geometry>
+                <cylinder length="0.04" radius="0.0001" />
+            </geometry>
+        </collision>
+        <visual>
+            <origin xyz="0 0 -0.02" rpy="0 0 0" />
+            <geometry>
+                <cylinder length="0.04" radius="0.0001" />
+            </geometry>
+            <material name="green">
+                <color rgba="0.0 1.0 0.0 1.0" />
+            </material>
+        </visual>
+    </link>
+
+    <joint name="joint4" type="revolute">
+        <axis xyz="1 1 0" />
+        <dynamics damping="0.0" friction="0.0" />
+        <limit lower="-10000" upper="10000" effort="1000.0" velocity="1000.0" />
+        <origin xyz="0.0 0.0 -0.05" rpy="0 0 0" />
+        <parent link="link3" />
+        <child link="link4" />
+    </joint> -->
+
     <joint name="joint0_y" type="revolute">
         <axis xyz="0 1 0" />
         <dynamics damping="0.0" friction="0.0" />
         <limit lower="-10000" upper="10000" effort="1000.0" velocity="1000.0" />
-        <origin xyz="0 0 -0.09" rpy="0 0 0" />
-        <parent link="link2" />
+        <origin xyz="0 0 -0.04" rpy="0 0 0" />
+        <parent link="link3" />
         <child link="rope_end" />
     </joint>
     <!-- Link: Rope End Link (with a 0.01kg sphere attached at the end of the rope) -->
