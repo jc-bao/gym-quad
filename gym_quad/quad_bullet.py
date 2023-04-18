@@ -183,7 +183,7 @@ class QuadBullet(gym.Env):
         self.xyz_drone, self.quat_drone, _, _, _, _, self.vxyz_drone, self.vrpy_drone = p.getLinkState(
             self.quad, 0, 1)
         self.xyz_obj, self.quat_obj, _, _, _, _, self.vxyz_obj, self.vrpy_obj = p.getLinkState(
-            self.quad, 3, 1)
+            self.quad, 4, 1)
         self.rpy_drone = p.getEulerFromQuaternion(self.quat_drone)
         self.rpy_obj = p.getEulerFromQuaternion(self.quat_obj)
         self.rotmat_drone = np.array(

@@ -65,35 +65,15 @@
         <origin rpy="0 0 0" xyz="0 0 -0.03" />
     </joint>
 
-    <!-- Link: Rope End Link (with a 0.01kg sphere attached at the end of the rope) -->
-    <link name="rope_end">
-        <inertial>
-            <origin rpy="0 0 0" xyz="0 0 -0.01" />
-            <mass value="0.01" />
-            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
-        </inertial>
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0 -0.01" />
-            <geometry>
-                <sphere radius=".01" />
-            </geometry>
-        </collision>
-        <visual>
-            <origin rpy="0 0 0" xyz="0 0 -0.01" />
-            <geometry>
-                <sphere radius=".01" />
-            </geometry>
-            <material name="red">
-                <color rgba="1.0 0.0 0.0 1.0" />
-            </material>
-        </visual>
-    </link>
+    
 
     <!-- Virtual Link and Joint for connecting the rope segments -->
     <link name="link1">
         <inertial>
-            <mass value="0.0001" />
-            <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" />
+            <!-- <mass value="0.000001" />
+            <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" /> -->
+            <mass value="0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
         </inertial>
         <collision>
             <origin xyz="0 0 -0.05" rpy="0 0 0" />
@@ -125,8 +105,10 @@
 
     <link name="link2">
         <inertial>
-            <mass value="0.0001" />
-            <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" />
+            <!-- <mass value="0.000001" />
+            <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0001" iyz="0" izz="0.0001" /> -->
+            <mass value="0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
         </inertial>
         <collision>
             <origin xyz="0 0 -0.045" rpy="0 0 0" />
@@ -162,5 +144,28 @@
         <parent link="link2" />
         <child link="rope_end" />
     </joint>
+    <!-- Link: Rope End Link (with a 0.01kg sphere attached at the end of the rope) -->
+    <link name="rope_end">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 -0.01" />
+            <mass value="0.01" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 -0.01" />
+            <geometry>
+                <sphere radius=".01" />
+            </geometry>
+        </collision>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0 -0.01" />
+            <geometry>
+                <sphere radius=".01" />
+            </geometry>
+            <material name="red">
+                <color rgba="1.0 0.0 0.0 1.0" />
+            </material>
+        </visual>
+    </link>
     
 </robot>
