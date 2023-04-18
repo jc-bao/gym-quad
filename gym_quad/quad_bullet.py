@@ -82,7 +82,7 @@ class QuadBullet(gym.Env):
         # Set up action and observation spaces
         self.action_space = gym.spaces.Box(low=-1, high=1, shape=(4,))
         self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(12,))
-        self.obs_keys = ['xyz_drone', 'quat_drone', 'vxyz_drone', 'omega_drone']
+        self.obs_keys = ['xyz_drone', 'quat_drone', 'vxyz_drone', 'vrpy_drone']
 
         # controller
         self.KP = np.array([64e2, 64e2, 32e2])
@@ -139,7 +139,7 @@ class QuadBullet(gym.Env):
     def ctlstep(self, thrust, target_rpy_rate):
         # run lower level attitude rate PID controller
         self.target_rpy_rate = target_rpy_rate
-        rpy_rate_error = target_rpy_rate - self.omega_drone
+        rpy_rate_error = target_rpy_rate - self.vrpy_drone
         torque = self.J @ self.controller.update(rpy_rate_error, self.ctl_dt)
         thrust, torque = np.clip(thrust, 0.0, self.max_thrust), np.clip(
             torque, -self.max_torque, self.max_torque)
@@ -179,9 +179,9 @@ class QuadBullet(gym.Env):
         Get state of the quadrotor
         """
 
-        self.xyz_drone, self.quat_drone, _, _, _, _, self.vxyz_drone, self.omega_drone = p.getLinkState(
+        self.xyz_drone, self.quat_drone, _, _, _, _, self.vxyz_drone, self.vrpy_drone = p.getLinkState(
             self.quad, 0, 1)
-        self.xyz_obj, self.quat_obj, _, _, _, _, self.vxyz_obj, self.omega_obj = p.getLinkState(
+        self.xyz_obj, self.quat_obj, _, _, _, _, self.vxyz_obj, self.vrpy_obj = p.getLinkState(
             self.quad, 3, 1)
         self.rpy_drone = p.getEulerFromQuaternion(self.quat_drone)
         self.rpy_obj = p.getEulerFromQuaternion(self.quat_obj)
@@ -196,14 +196,14 @@ class QuadBullet(gym.Env):
             'rpy_drone': self.rpy_drone,
             'rotmat_drone': self.rotmat_drone,
             'vxyz_drone': self.vxyz_drone,
-            'omega_drone': self.omega_drone,
-            'omega_drone_error': self.target_rpy_rate - self.omega_drone,
+            'vrpy_drone': self.vrpy_drone,
+            'vrpy_drone_error': self.target_rpy_rate - self.vrpy_drone,
             'xyz_obj': self.xyz_obj,
             'quat_obj': self.quat_obj,
             'rpy_obj': self.rpy_obj,
             'rotmat_obj': self.rotmat_obj,
             'vxyz_obj': self.vxyz_obj,
-            'omega_obj': self.omega_obj,
+            'vrpy_obj': self.vrpy_obj,
             'thrust': self.thrust,
             'torque': self.torque,
             'thrust_normed': self.thrust/self.max_thrust,
@@ -217,7 +217,7 @@ class QuadBullet(gym.Env):
 
 class Logger:
     def __init__(self) -> None:
-        self.log_items = ['xyz_drone', 'rpy_drone', 'vxyz_drone', 'omega_drone', 'xyz_obj']
+        self.log_items = ['xyz_drone', 'rpy_drone', 'vxyz_drone', 'vrpy_drone', 'xyz_obj']
         self.log_dict = {item: [] for item in self.log_items}
 
     def log(self, state):
