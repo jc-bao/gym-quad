@@ -8,6 +8,7 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 from icecream import ic
 import pandas as pd
+import time
 
 
 class PIDController:
@@ -46,6 +47,7 @@ class QuadBullet(gym.Env):
         super().__init__()
 
         self.logger = Logger(enable=True)
+        self.real_time_render = False
 
         # motor parameters
         self.max_torque = np.array([9e-3, 9e-3, 2e-3])
@@ -84,9 +86,11 @@ class QuadBullet(gym.Env):
         self.joint0_x_idx = self.get_joint_index('joint0_x')
         self.joint0_y_idx = self.get_joint_index('joint0_y')
         self.hook_joint_idx = self.get_joint_index('hook_joint')
+        self.obj_joint_idx = self.get_joint_index('obj_joint')
         p.enableJointForceTorqueSensor(self.quad, self.joint0_x_idx, True)
         p.enableJointForceTorqueSensor(self.quad, self.joint0_y_idx, True)
         p.enableJointForceTorqueSensor(self.quad, self.hook_joint_idx, True)
+        p.enableJointForceTorqueSensor(self.quad, self.obj_joint_idx, True)
 
         # Set up action and observation spaces
         self.action_space = gym.spaces.Box(low=-1, high=1, shape=(4,))
@@ -202,6 +206,8 @@ class QuadBullet(gym.Env):
         # log data
         state = self._get_state()
         self.logger.log(state)
+        if self.real_time_render:
+            time.sleep(self.sim_dt*1.0)
 
     def _get_state(self) -> np.ndarray:
         """
@@ -222,7 +228,8 @@ class QuadBullet(gym.Env):
         # get the force applied to the joint
         joint0_x_force = np.array(p.getJointState(self.quad, self.joint0_x_idx)[2])[:3]
         joint0_y_force = np.array(p.getJointState(self.quad, self.joint0_y_idx)[2])[:3]
-        hook_force = np.array(p.getJointState(self.quad, self.hook_idx)[2])[:3]
+        hook_force = np.array(p.getJointState(self.quad, self.hook_joint_idx)[2])[:3]
+        obj_force = np.array(p.getJointState(self.quad, self.obj_joint_idx)[2])[:3]
 
         state = {
             'xyz_drones': self.xyz_drones,
@@ -245,7 +252,8 @@ class QuadBullet(gym.Env):
             'joint0_x_force': joint0_x_force,
             'joint0_y_force': joint0_y_force,
             'hook_force': hook_force,
-            'rope_force_drones': -(joint0_x_force+ joint0_y_force)/2,
+            'obj_force': obj_force,
+            'rope_force_drones': -obj_force,
         }
         # convert all to numpy arrays
         for key in state.keys():
@@ -340,6 +348,7 @@ class Logger:
 
 def test():
     env = QuadBullet()
+    env.real_time_render=False
     state = env.reset()
     target_pos = np.array([0.5, 0.55, 0.6])
     # create a sphere with pybullet to visualize the target position
@@ -348,7 +357,7 @@ def test():
     target_sphere = p.createMultiBody(
         baseVisualShapeIndex=target_sphere, basePosition=target_pos)
 
-    for i in range(1):
+    for i in range(3):
         # if i == 0:
         #     # give the object an initial velocity
         #     p.applyExternalForce(env.quad,
@@ -363,7 +372,7 @@ def test():
         # action = env.policy_obj(target_pos)
 
         # manual control
-        action = np.array([(env.drone_mass + env.obj_mass)*9.81, 3.0, 0.0, 0.0])
+        action = np.array([(env.drone_mass + env.obj_mass)*9.81, 1.0, 0.0, 0.0])
         env.step(action)
     env.logger.plot('results/test')
 
