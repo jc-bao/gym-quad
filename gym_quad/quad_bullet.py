@@ -7,7 +7,7 @@ from typing import Tuple
 from matplotlib import pyplot as plt
 import seaborn as sns
 from icecream import ic
-import time
+import pandas as pd
 
 
 class PIDController:
@@ -44,6 +44,8 @@ class QuadBullet(gym.Env):
 
     def __init__(self) -> None:
         super().__init__()
+
+        self.logger = Logger(enable=True)
 
         # motor parameters
         self.max_torque = np.array([9e-3, 9e-3, 2e-3])
@@ -85,11 +87,18 @@ class QuadBullet(gym.Env):
         self.obs_keys = ['xyz_drone', 'quat_drone', 'vxyz_drone', 'vrpy_drone']
 
         # controller
-        self.KP = np.array([64e2, 64e2, 32e2])
-        self.KI = np.array([256e2, 256e2, 12e2])
-        self.KD = np.array([2e-1, 2e-1, 0.0])
+        self.KP = np.array([4e2, 4e2, 1e2])
+        self.KI = np.array([1e3, 1e3, 3e2])
+        self.KD = np.array([0.0, 0.0, 0.0])
         self.KI_MAX = np.array([10000.0, 10000.0, 10000.0])
-        self.controller = PIDController(self.KP, self.KI, self.KD, self.KI_MAX)
+        self.attirate_controller = PIDController(
+            self.KP, self.KI, self.KD, self.KI_MAX)
+        self.attitude_controller = PIDController(
+            np.ones(3)*7.0, np.ones(3)*0.1, np.ones(3)*0.05, np.ones(3)*100.0)
+        self.objpos_controller = PIDController(
+            np.ones(3)*10.0, np.ones(3)*0.0, np.ones(3)*12.0, np.ones(3)*100.0)
+        self.pos_controller = PIDController(
+            np.ones(3)*12.0, np.ones(3)*0.3, np.ones(3)*0.0, np.ones(3)*100.0)
 
         # reset
         self.thrust = 0.0
@@ -102,12 +111,22 @@ class QuadBullet(gym.Env):
         Reset the simulation
         """
         # Reset controller
-        self.controller.reset()
+        self.attirate_controller.reset()
+        self.attitude_controller.reset()
+        self.pos_controller.reset()
+        self.objpos_controller.reset()
         # Reset quadrotor
         p.resetBasePositionAndOrientation(self.quad, [0, 0, 0.5], [0, 0, 0, 1])
         # step simulation
         p.stepSimulation()
         return self._get_state()
+
+    def close(self) -> None:
+        """
+        Close the simulation
+        """
+        p.disconnect()
+        self.logger.plot('results/test')
 
     def step(self, action: np.ndarray) -> Tuple[np.ndarray, float, bool, dict]:
         """
@@ -123,7 +142,7 @@ class QuadBullet(gym.Env):
 
         # Get state
         state = self._get_state()
-        obs = np.concatenate((state[k] for k in self.obs_keys))
+        obs = np.concatenate([state[k] for k in self.obs_keys])
 
         # Get reward
         reward = 0
@@ -140,12 +159,12 @@ class QuadBullet(gym.Env):
         # run lower level attitude rate PID controller
         self.target_rpy_rate = target_rpy_rate
         rpy_rate_error = target_rpy_rate - self.vrpy_drone
-        torque = self.J @ self.controller.update(rpy_rate_error, self.ctl_dt)
+        torque = self.J @ self.attirate_controller.update(
+            rpy_rate_error, self.ctl_dt)
         thrust, torque = np.clip(thrust, 0.0, self.max_thrust), np.clip(
             torque, -self.max_torque, self.max_torque)
         for _ in range(self.ctl_substeps):
             self.simstep(thrust, torque)
-        return self._get_state()
 
     def simstep(self, thrust, torque):
         self.thrust, self.torque = thrust, torque
@@ -173,6 +192,8 @@ class QuadBullet(gym.Env):
                                     )
         # Step simulation
         p.stepSimulation()
+        # log data
+        self.logger.log(self._get_state())
 
     def _get_state(self) -> np.ndarray:
         """
@@ -214,35 +235,77 @@ class QuadBullet(gym.Env):
             state[key] = np.array(state[key])
         return state
 
+    def policy_att(self, vec_target, thrust, extra_torque=np.zeros(3)):
+        rot_err = np.cross(np.array([0, 0, 1]), vec_target)
+        rot_err[2] = 0.0 - self.rpy_drone[2]
+        rpy_rate_target = self.attitude_controller.update(
+            rot_err, self.step_dt) + extra_torque
+        return np.concatenate((np.array([thrust]), rpy_rate_target))
+
+    def policy_pos(self, xyz_target, extra_force=np.zeros(3)):
+        pos_err = xyz_target - self.xyz_drone
+        target_force_drone = self.drone_mass*self.pos_controller.update(pos_err, self.step_dt) + np.array([
+            0.0, 0.0, 9.81*self.drone_mass]) + extra_force
+        thrust_desired = np.dot(target_force_drone, self.rotmat_drone)
+        thrust = thrust_desired[2]
+        vec_target = thrust_desired/np.linalg.norm(thrust_desired)
+        return self.policy_att(vec_target, thrust)
+
+    def policy_obj(self, xyz_target):
+        pos_err = xyz_target - self.xyz_obj
+        target_force_obj = self.obj_mass*self.pos_controller.update(pos_err, self.step_dt) + np.array([
+            0.0, 0.0, 9.81*self.obj_mass])
+        xyz_obj2drone = self.xyz_obj - self.xyz_drone
+        z_hat_obj = xyz_obj2drone / np.linalg.norm(xyz_obj2drone)
+        target_force_obj_projected = np.dot(
+            target_force_obj, z_hat_obj) * z_hat_obj
+        xyz_drone_target = self.xyz_obj + target_force_obj / \
+            np.linalg.norm(target_force_obj) * 0.2 + np.array([0.0, 0.0, 0.03])
+        return self.policy_pos(xyz_drone_target, target_force_obj_projected)
+
 
 class Logger:
-    def __init__(self) -> None:
-        self.log_items = ['xyz_drone', 'rpy_drone', 'vxyz_drone', 'vrpy_drone', 'xyz_obj']
+    def __init__(self, enable=True) -> None:
+        self.enable = enable
+        self.log_items = ['xyz_drone', 'rpy_drone',
+                          'vxyz_drone', 'vrpy_drone', 'xyz_obj']
         self.log_dict = {item: [] for item in self.log_items}
 
     def log(self, state):
+        if not self.enable:
+            return
         for item in self.log_items:
             self.log_dict[item].append(np.array(state[item]))
 
     def plot(self, filename):
+        if not self.enable:
+            return
         # set seaborn theme
         sns.set_theme()
         # create figure
         fig, axs = plt.subplots(len(self.log_items), 1,
                                 figsize=(10, 3*len(self.log_items)))
         # plot
-        x_time = np.arange(len(self.log_dict[self.log_items[0]])) / 500.0
+        x_time = np.arange(len(self.log_dict[self.log_items[0]])) * 4e-4
         for i, item in enumerate(self.log_items):
+            self.log_dict[item] = np.array(self.log_dict[item])
             axs[i].plot(x_time, self.log_dict[item])
             axs[i].set_title(item)
         # save
         fig.savefig(filename+'.png')
-        # save the dict log_items
-
-
+        # save the dict log_items as csv
+        # first split all multi-dimensional arrays into single-dimensional arrays
+        save_dict = {}
+        for item in self.log_items:
+            if len(self.log_dict[item].shape) == 1:
+                save_dict[item] = self.log_dict[item]
+            else:
+                for i in range(self.log_dict[item].shape[1]):
+                    save_dict[item+'_'+str(i)] = self.log_dict[item][:, i]
+        df = pd.DataFrame(save_dict)
+        df.to_csv(filename+'.csv', index=False)
 
 def test():
-    logger = Logger()
     env = QuadBullet()
     state = env.reset()
     target_pos = np.array([0.5, 0.55, 0.6])
@@ -252,17 +315,7 @@ def test():
     target_sphere = p.createMultiBody(
         baseVisualShapeIndex=target_sphere, basePosition=target_pos)
 
-    # set up controllers
-    objpos_controller = PIDController(
-        np.ones(3)*10.0, np.ones(3)*0.0, np.ones(3)*12.0, np.ones(3)*100.0)
-    pos_controller = PIDController(
-        np.ones(3)*12.0, np.ones(3)*0.3, np.ones(3)*0.0, np.ones(3)*100.0)
-    attitude_controller = PIDController(
-        np.ones(3)*7.0, np.ones(3)*0.1, np.ones(3)*0.05, np.ones(3)*100.0)
-    pos_controller.reset()
-    attitude_controller.reset()
-
-    for i in range(100):
+    for i in range(5):
         # if i == 0:
         #     # give the object an initial velocity
         #     p.applyExternalForce(env.quad,
@@ -274,37 +327,12 @@ def test():
         #                             )
 
         # PID controller
-        # Object-level controller
-        delta_pos = np.clip(target_pos - state['xyz_obj'], -1.0, 1.0)
-        target_force_obj = env.obj_mass * \
-            objpos_controller.update(
-                delta_pos, env.step_dt) + np.array([0.0, 0.0, 9.81*env.obj_mass])
-        xyz_obj2drone = state['xyz_obj'] - state['xyz_drone']
-        z_hat_obj = xyz_obj2drone / np.linalg.norm(xyz_obj2drone)
-        target_force_obj_projected = np.dot(
-            target_force_obj, z_hat_obj) * z_hat_obj
-        # Drone-level controller
-        xyz_drone_target = state['xyz_obj'] + target_force_obj / \
-            np.linalg.norm(target_force_obj) * 0.2 + np.array([0.0, 0.0, 0.03])
-        # TODO check target_force_obj_projected, make the mass of the object smaller
-        target_force_drone = env.drone_mass*pos_controller.update(xyz_drone_target - state['xyz_drone'], env.step_dt) + np.array([
-            0.0, 0.0, 9.81*env.drone_mass]) + target_force_obj_projected
-        thrust_desired = np.dot(target_force_drone, state['rotmat_drone'])
-        thrust = thrust_desired[2]
-        rot_err = np.cross(
-            np.array([0, 0, 1]), thrust_desired/np.linalg.norm(thrust_desired))
-        rot_err[2] = 0.0 - state['rpy_drone'][2]
-        rpy_rate_target = attitude_controller.update(rot_err, env.step_dt)
+        # action = env.policy_obj(target_pos)
 
-        for _ in range(env.step_substeps):
-            state = env.ctlstep(thrust, rpy_rate_target)
-            # Extra logging term
-            state['xyz_drone_error'] = xyz_drone_target - state['xyz_drone']
-            state['xyz_obj_error'] = target_pos - state['xyz_obj']
-            state['rpy_drone_error'] = rot_err
-            logger.log(state)
-            time.sleep(env.ctl_dt)
-    logger.plot('results/test')
+        # manual control
+        action = np.array([(env.drone_mass + env.obj_mass)*9.81, 3.0, 0.0, 0.0])
+        env.step(action)
+    env.logger.plot('results/test')
 
 
 if __name__ == "__main__":

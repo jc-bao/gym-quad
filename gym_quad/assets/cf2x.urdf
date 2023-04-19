@@ -55,7 +55,7 @@
     <joint name="hook_joint" type="fixed">
         <parent link="center_of_mass_link" />
         <child link="hook" />
-        <origin rpy="0.00000 -0.00000 0.00000" xyz="0.0 0.0 -0.03" />
+        <origin rpy="0.00000 -0.00000 0.00000" xyz="0.0 0.0 -0.05" />
         <axis xyz="0.00000 0.00000 0.00000" />
     </joint>
 
