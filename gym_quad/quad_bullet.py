@@ -84,7 +84,7 @@ class QuadBullet(gym.Env):
         # Set up action and observation spaces
         self.action_space = gym.spaces.Box(low=-1, high=1, shape=(4,))
         self.observation_space = gym.spaces.Box(low=-1, high=1, shape=(12,))
-        self.obs_keys = ['xyz_drone', 'quat_drone', 'vxyz_drone', 'vrpy_drone']
+        self.obs_keys = ['xyz_drones', 'quat_drones', 'vxyz_drones', 'vrpy_drones']
 
         # controller
         self.KP = np.array([4e2, 4e2, 1e2])
@@ -103,7 +103,7 @@ class QuadBullet(gym.Env):
         # reset
         self.thrust = 0.0
         self.torque = np.zeros(3)
-        self.target_rpy_rate = np.zeros(3)
+        self.vrpy_target = np.zeros(3)
         self.reset()
 
     def reset(self) -> np.ndarray:
@@ -135,10 +135,10 @@ class QuadBullet(gym.Env):
 
         # convert action to rpm
         thrust = action[0]
-        target_rpy_rate = action[1:]
+        vrpy_target = action[1:]
 
         for _ in range(self.step_substeps):
-            self.ctlstep(thrust, target_rpy_rate)
+            self.ctlstep(thrust, vrpy_target)
 
         # Get state
         state = self._get_state()
@@ -155,12 +155,12 @@ class QuadBullet(gym.Env):
 
         return obs, reward, done, info
 
-    def ctlstep(self, thrust, target_rpy_rate):
+    def ctlstep(self, thrust, vrpy_target):
         # run lower level attitude rate PID controller
-        self.target_rpy_rate = target_rpy_rate
-        rpy_rate_error = target_rpy_rate - self.vrpy_drone
+        self.vrpy_target = vrpy_target
+        vrpy_error = vrpy_target - self.vrpy_drones
         torque = self.J @ self.attirate_controller.update(
-            rpy_rate_error, self.ctl_dt)
+            vrpy_error, self.ctl_dt)
         thrust, torque = np.clip(thrust, 0.0, self.max_thrust), np.clip(
             torque, -self.max_torque, self.max_torque)
         for _ in range(self.ctl_substeps):
@@ -200,25 +200,25 @@ class QuadBullet(gym.Env):
         Get state of the quadrotor
         """
 
-        self.xyz_drone, self.quat_drone, _, _, _, _, self.vxyz_drone, self.vrpy_drone = p.getLinkState(
+        self.xyz_drones, self.quat_drones, _, _, _, _, self.vxyz_drones, self.vrpy_drones = p.getLinkState(
             self.quad, 0, 1)
         self.xyz_obj, self.quat_obj, _, _, _, _, self.vxyz_obj, self.vrpy_obj = p.getLinkState(
             self.quad, 3, 1)
-        self.rpy_drone = p.getEulerFromQuaternion(self.quat_drone)
+        self.rpy_drones = p.getEulerFromQuaternion(self.quat_drones)
         self.rpy_obj = p.getEulerFromQuaternion(self.quat_obj)
-        self.rotmat_drone = np.array(
-            p.getMatrixFromQuaternion(self.quat_drone)).reshape(3, 3)
+        self.rotmat_drones = np.array(
+            p.getMatrixFromQuaternion(self.quat_drones)).reshape(3, 3)
         self.rotmat_obj = np.array(
             p.getMatrixFromQuaternion(self.quat_obj)).reshape(3, 3)
 
         state = {
-            'xyz_drone': self.xyz_drone,
-            'quat_drone': self.quat_drone,
-            'rpy_drone': self.rpy_drone,
-            'rotmat_drone': self.rotmat_drone,
-            'vxyz_drone': self.vxyz_drone,
-            'vrpy_drone': self.vrpy_drone,
-            'vrpy_drone_error': self.target_rpy_rate - self.vrpy_drone,
+            'xyz_drones': self.xyz_drones,
+            'quat_drones': self.quat_drones,
+            'rpy_drones': self.rpy_drones,
+            'rotmat_drones': self.rotmat_drones,
+            'vxyz_drones': self.vxyz_drones,
+            'vrpy_drones': self.vrpy_drones,
+            'vrpy_drones_error': self.vrpy_target - self.vrpy_drones,
             'xyz_obj': self.xyz_obj,
             'quat_obj': self.quat_obj,
             'rpy_obj': self.rpy_obj,
@@ -237,16 +237,16 @@ class QuadBullet(gym.Env):
 
     def policy_att(self, vec_target, thrust, extra_torque=np.zeros(3)):
         rot_err = np.cross(np.array([0, 0, 1]), vec_target)
-        rot_err[2] = 0.0 - self.rpy_drone[2]
+        rot_err[2] = 0.0 - self.rpy_drones[2]
         rpy_rate_target = self.attitude_controller.update(
             rot_err, self.step_dt) + extra_torque
         return np.concatenate((np.array([thrust]), rpy_rate_target))
 
     def policy_pos(self, xyz_target, extra_force=np.zeros(3)):
-        pos_err = xyz_target - self.xyz_drone
-        target_force_drone = self.drone_mass*self.pos_controller.update(pos_err, self.step_dt) + np.array([
+        pos_err = xyz_target - self.xyz_drones
+        target_force_drones = self.drone_mass*self.pos_controller.update(pos_err, self.step_dt) + np.array([
             0.0, 0.0, 9.81*self.drone_mass]) + extra_force
-        thrust_desired = np.dot(target_force_drone, self.rotmat_drone)
+        thrust_desired = np.dot(target_force_drones, self.rotmat_drones)
         thrust = thrust_desired[2]
         vec_target = thrust_desired/np.linalg.norm(thrust_desired)
         return self.policy_att(vec_target, thrust)
@@ -255,20 +255,20 @@ class QuadBullet(gym.Env):
         pos_err = xyz_target - self.xyz_obj
         target_force_obj = self.obj_mass*self.pos_controller.update(pos_err, self.step_dt) + np.array([
             0.0, 0.0, 9.81*self.obj_mass])
-        xyz_obj2drone = self.xyz_obj - self.xyz_drone
+        xyz_obj2drone = self.xyz_obj - self.xyz_drones
         z_hat_obj = xyz_obj2drone / np.linalg.norm(xyz_obj2drone)
         target_force_obj_projected = np.dot(
             target_force_obj, z_hat_obj) * z_hat_obj
-        xyz_drone_target = self.xyz_obj + target_force_obj / \
+        xyz_drones_target = self.xyz_obj + target_force_obj / \
             np.linalg.norm(target_force_obj) * 0.2 + np.array([0.0, 0.0, 0.03])
-        return self.policy_pos(xyz_drone_target, target_force_obj_projected)
+        return self.policy_pos(xyz_drones_target, target_force_obj_projected)
 
 
 class Logger:
     def __init__(self, enable=True) -> None:
         self.enable = enable
-        self.log_items = ['xyz_drone', 'rpy_drone',
-                          'vxyz_drone', 'vrpy_drone', 'xyz_obj']
+        self.log_items = ['xyz_drones', 'rpy_drones',
+                          'vxyz_drones', 'vrpy_drones', 'xyz_obj', 'vxyz_obj']
         self.log_dict = {item: [] for item in self.log_items}
 
     def log(self, state):
@@ -295,7 +295,7 @@ class Logger:
         fig.savefig(filename+'.png')
         # save the dict log_items as csv
         # first split all multi-dimensional arrays into single-dimensional arrays
-        save_dict = {}
+        save_dict = {'time': x_time}
         for item in self.log_items:
             if len(self.log_dict[item].shape) == 1:
                 save_dict[item] = self.log_dict[item]
@@ -333,7 +333,6 @@ def test():
         action = np.array([(env.drone_mass + env.obj_mass)*9.81, 3.0, 0.0, 0.0])
         env.step(action)
     env.logger.plot('results/test')
-
 
 if __name__ == "__main__":
     test()
