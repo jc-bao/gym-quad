@@ -357,7 +357,7 @@ def test():
     target_sphere = p.createMultiBody(
         baseVisualShapeIndex=target_sphere, basePosition=target_pos)
 
-    for i in range(3):
+    for i in range(10):
         # if i == 0:
         #     # give the object an initial velocity
         #     p.applyExternalForce(env.quad,
