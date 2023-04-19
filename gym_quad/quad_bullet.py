@@ -83,8 +83,10 @@ class QuadBullet(gym.Env):
         # joint index
         self.joint0_x_idx = self.get_joint_index('joint0_x')
         self.joint0_y_idx = self.get_joint_index('joint0_y')
+        self.hook_joint_idx = self.get_joint_index('hook_joint')
         p.enableJointForceTorqueSensor(self.quad, self.joint0_x_idx, True)
         p.enableJointForceTorqueSensor(self.quad, self.joint0_y_idx, True)
+        p.enableJointForceTorqueSensor(self.quad, self.hook_joint_idx, True)
 
         # Set up action and observation spaces
         self.action_space = gym.spaces.Box(low=-1, high=1, shape=(4,))
@@ -218,8 +220,9 @@ class QuadBullet(gym.Env):
             p.getMatrixFromQuaternion(self.quat_obj)).reshape(3, 3)
 
         # get the force applied to the joint
-        joint0_x_force = np.array(p.getJointState(self.quad, self.joint0_x_idx)[2])
-        joint0_y_force = np.array(p.getJointState(self.quad, self.joint0_y_idx)[2])
+        joint0_x_force = np.array(p.getJointState(self.quad, self.joint0_x_idx)[2])[:3]
+        joint0_y_force = np.array(p.getJointState(self.quad, self.joint0_y_idx)[2])[:3]
+        hook_force = np.array(p.getJointState(self.quad, self.hook_idx)[2])[:3]
 
         state = {
             'xyz_drones': self.xyz_drones,
@@ -241,7 +244,8 @@ class QuadBullet(gym.Env):
             'torque_normed': self.torque/self.max_torque, 
             'joint0_x_force': joint0_x_force,
             'joint0_y_force': joint0_y_force,
-            'rope_force_drones': -(joint0_x_force[:3] + joint0_y_force[:3])/2,
+            'hook_force': hook_force,
+            'rope_force_drones': -(joint0_x_force+ joint0_y_force)/2,
         }
         # convert all to numpy arrays
         for key in state.keys():
