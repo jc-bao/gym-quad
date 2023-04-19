@@ -80,6 +80,11 @@ class QuadBullet(gym.Env):
         self.quad = p.loadURDF("assets/cf2x.urdf", [0, 0, 0.5])
         # get joint number
         self.num_joints = p.getNumJoints(self.quad)
+        # joint index
+        self.joint0_x_idx = self.get_joint_index('joint0_x')
+        self.joint0_y_idx = self.get_joint_index('joint0_y')
+        p.enableJointForceTorqueSensor(self.quad, self.joint0_x_idx, True)
+        p.enableJointForceTorqueSensor(self.quad, self.joint0_y_idx, True)
 
         # Set up action and observation spaces
         self.action_space = gym.spaces.Box(low=-1, high=1, shape=(4,))
@@ -193,7 +198,8 @@ class QuadBullet(gym.Env):
         # Step simulation
         p.stepSimulation()
         # log data
-        self.logger.log(self._get_state())
+        state = self._get_state()
+        self.logger.log(state)
 
     def _get_state(self) -> np.ndarray:
         """
@@ -210,6 +216,10 @@ class QuadBullet(gym.Env):
             p.getMatrixFromQuaternion(self.quat_drones)).reshape(3, 3)
         self.rotmat_obj = np.array(
             p.getMatrixFromQuaternion(self.quat_obj)).reshape(3, 3)
+
+        # get the force applied to the joint
+        joint0_x_force = np.array(p.getJointState(self.quad, self.joint0_x_idx)[2])
+        joint0_y_force = np.array(p.getJointState(self.quad, self.joint0_y_idx)[2])
 
         state = {
             'xyz_drones': self.xyz_drones,
@@ -228,12 +238,30 @@ class QuadBullet(gym.Env):
             'thrust': self.thrust,
             'torque': self.torque,
             'thrust_normed': self.thrust/self.max_thrust,
-            'torque_normed': self.torque/self.max_torque
+            'torque_normed': self.torque/self.max_torque, 
+            'joint0_x_force': joint0_x_force,
+            'joint0_y_force': joint0_y_force,
+            'rope_force_drones': -(joint0_x_force[:3] + joint0_y_force[:3])/2,
         }
         # convert all to numpy arrays
         for key in state.keys():
             state[key] = np.array(state[key])
         return state
+
+    def get_joint_index(self, joint_name):
+        # Loop over all joints in the robot and look for the joint with the desired name
+        numJoints = p.getNumJoints(self.quad)
+        for i in range(numJoints):
+            jointInfo = p.getJointInfo(self.quad, i)
+            if jointInfo[1].decode("utf-8") == joint_name:
+                # Joint found! Print its index
+                jointIndex = i
+                print("Joint {} has index {}".format(joint_name, jointIndex))
+                break
+        else:
+            # Joint not found
+            print("Joint {} not found in the robot".format(joint_name))
+        return jointIndex
 
     def policy_att(self, vec_target, thrust, extra_torque=np.zeros(3)):
         rot_err = np.cross(np.array([0, 0, 1]), vec_target)
@@ -268,7 +296,8 @@ class Logger:
     def __init__(self, enable=True) -> None:
         self.enable = enable
         self.log_items = ['xyz_drones', 'rpy_drones',
-                          'vxyz_drones', 'vrpy_drones', 'xyz_obj', 'vxyz_obj']
+                          'vxyz_drones', 'vrpy_drones', 'xyz_obj', 'vxyz_obj', 'torque', 
+                            'rope_force_drones']
         self.log_dict = {item: [] for item in self.log_items}
 
     def log(self, state):
@@ -315,7 +344,7 @@ def test():
     target_sphere = p.createMultiBody(
         baseVisualShapeIndex=target_sphere, basePosition=target_pos)
 
-    for i in range(5):
+    for i in range(1):
         # if i == 0:
         #     # give the object an initial velocity
         #     p.applyExternalForce(env.quad,

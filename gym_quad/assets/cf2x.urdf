@@ -98,6 +98,11 @@
         <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
         <parent link="hook" />
         <child link="virtual_link0" />
+        <!-- <sensor name="my_joint_sensor0" type="force">
+            <visualize>true</visualize>
+            <always_on>true</always_on>
+            <update_rate>2500</update_rate>
+        </sensor> -->
     </joint>
 
     <joint name="joint0_y" type="revolute">
@@ -107,6 +112,13 @@
         <origin xyz="0 0 0" rpy="0 0 0" />
         <parent link="virtual_link0" />
         <child link="rope_end" />
+        <!-- <sensor name="my_joint_sensor1" type="force">
+            <visualize>true</visualize>
+            <always_on>true</always_on>
+            <update_rate>2500</update_rate>
+        </sensor> -->
     </joint>
+
+
 
 </robot>
