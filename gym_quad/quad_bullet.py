@@ -99,9 +99,9 @@ class QuadBullet(gym.Env):
 
         # controller
         self.KP = np.array([4e2, 4e2, 1e2])
-        self.KI = np.array([1e3, 1e3, 3e2])
+        self.KI = np.array([2e4, 2e4, 1e4])
         self.KD = np.array([0.0, 0.0, 0.0])
-        self.KI_MAX = np.array([10000.0, 10000.0, 10000.0])
+        self.KI_MAX = np.array([1e-1, 1e-1, 1e-1])
         self.attirate_controller = PIDController(
             self.KP, self.KI, self.KD, self.KI_MAX)
         self.attitude_controller = PIDController(
