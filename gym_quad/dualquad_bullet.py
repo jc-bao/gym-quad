@@ -72,8 +72,8 @@ class QuadBullet(gym.Env):
         self.quad = p.loadURDF("assets/cf2x_dual.urdf", [0, 0, 0.5])
         # get joint number
         self.num_joints = p.getNumJoints(self.quad)
-        self.drone_idx = [5, 11]
-        self.obj_idx = 0
+        self.drone_idx = [0, 1]
+        self.obj_idx = 2
         self.num_drones = len(self.drone_idx)
 
         # Set up action and observation spaces
@@ -153,7 +153,13 @@ class QuadBullet(gym.Env):
 
     def simstep(self, thrust, torque):
         self.thrust, self.torque = thrust, torque
+        # cf1_id = p.getBodyUniqueId(self.quad, "cf1")
+        # cf2_id = p.getBodyUniqueId(self.quad, "cf2")
         for i, idx in enumerate(self.drone_idx):
+            # print("idx",idx)
+            # print("thrust",self.thrust[i])
+            # print("torque",self.torque[i])
+            
             p.applyExternalForce(self.quad,
                                     idx,
                                     forceObj=[0, 0, self.thrust[i]],
@@ -230,7 +236,7 @@ def test():
     logger = Logger()
     env = QuadBullet()
     state = env.reset()
-    target_pos = np.array([[0.15, 0.0, 0.5],[-0.15, 0.0, 0.5]])
+    target_pos = np.array([[0.15, 0.2, 1.5],[-0.15, 0.2, 1.5]])
 
     # set up controllers
     pos_controller = PIDController(np.ones(3)*0.03, np.ones(3)*0.01, np.ones(3)*0.06, np.ones(3)*100.0, batch_size=env.num_drones)
@@ -243,26 +249,28 @@ def test():
             # give the object an initial velocity
             p.applyExternalForce(env.quad,
                                     0,
-                                    forceObj=[20.0, 20.0, 0.0],
+                                    # forceObj=[20.0, 20.0, 0.0],
+                                    forceObj=[2.0, 2.0, 0.0],
                                     posObj=[0, 0, 0],
                                     flags=p.LINK_FRAME,
                                     physicsClientId=env.CLIENT
                                     )
         
         # PID controller
-        # delta_pos = np.clip(target_pos - state['xyz_drone'], -0.2, 0.2)
-        # target_force = pos_controller.update(delta_pos, env.step_dt) + np.array([0.0, 0.0, 9.81*0.037])
-        # thrust = np.zeros(env.num_drones)
-        # rpy_target = np.zeros((env.num_drones, 3))
-        # for i in range(env.num_drones):
-        #     thrust[i] = np.array([np.dot(target_force[i], state['rotmat_drone'][i])[2]])
-        #     rpy_target[i,0] = np.arctan2(-target_force[i,1], np.sqrt(target_force[i,0]**2 + target_force[i,2]**2))
-        #     rpy_target[i,1] = np.arctan2(target_force[i,0], target_force[i,2])
-        # rpy_rate_target = attitude_controller.update(rpy_target - state['rpy_drone'], env.step_dt)
+        delta_pos = np.clip(target_pos - state['xyz_drone'], -0.2, 0.2)
+        target_force = pos_controller.update(delta_pos, env.step_dt) + np.array([0.0, 0.0, 9.81*0.027])
+        thrust = np.zeros(env.num_drones)
+        rpy_target = np.zeros((env.num_drones, 3))
+        for i in range(env.num_drones):
+            thrust[i] = np.array([np.dot(target_force[i], state['rotmat_drone'][i])[2]])
+            rpy_target[i,0] = np.arctan2(-target_force[i,1], np.sqrt(target_force[i,0]**2 + target_force[i,2]**2))
+            rpy_target[i,1] = np.arctan2(target_force[i,0], target_force[i,2])
+        rpy_rate_target = attitude_controller.update(rpy_target - state['rpy_drone'], env.step_dt)
+
 
         # Manual control
-        thrust = np.ones(env.num_drones)*0.027*9.81
-        rpy_rate_target = np.zeros((env.num_drones, 3))
+        # thrust = np.ones(env.num_drones)*0.027*9.81
+        # rpy_rate_target = np.zeros((env.num_drones, 3))
 
         for _ in range(env.step_substeps):
             state = env.ctlstep(thrust, rpy_rate_target)

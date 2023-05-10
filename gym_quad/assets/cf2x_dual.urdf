@@ -1,86 +1,6 @@
 <?xml version="1.0"?>
 
 <robot name="cf2_dual">
-    <link name="obj">
-        <inertial>
-            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
-            <mass value="0.00001" />
-            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
-        </inertial>
-        <collision>
-            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
-            <geometry>
-                <sphere radius=".01" />
-            </geometry>
-        </collision>
-        <visual>
-            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
-            <geometry>
-                <sphere radius=".01" />
-            </geometry>
-            <material name="red">
-                <color rgba="1.0 0.0 0.0 1.0" />
-            </material>
-        </visual>
-    </link>
-
-    <link name="obj_left">
-        <intertial>
-            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
-            <mass value="0.0" />
-            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
-        </intertial>
-    </link>
-
-    <link name="obj_left_up">
-        <intertial>
-            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
-            <mass value="0.0" />
-            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
-        </intertial>
-    </link>
-
-    <link name="obj_right">
-        <intertial>
-            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
-            <mass value="0.0" />
-            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
-        </intertial>
-    </link>
-
-    <link name="obj_right_up">
-        <intertial>
-            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
-            <mass value="0.0" />
-            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
-        </intertial>
-    </link>
-    
-    <link name="cf1_down">
-        <intertial>
-            <origin rpy="0 0 0" xyz="0.0 0.0 0.0" />
-            <mass value="0.0" />
-            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
-        </intertial>
-    </link>
-
-    <link name="cf1_mid">
-        <intertial>
-            <origin rpy="0 0 0" xyz="0.0 0.0 0.0" />
-            <mass value="0.0" />
-            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
-        </intertial>
-    </link>
-
-    <link name="cf1_hook">
-        <intertial>
-            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
-            <mass value="0.0" />
-            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
-        </intertial>
-    </link>
-
-    <!-- 8 -->
     <link name="cf1">
         <inertial>
             <origin rpy="0 0 0" xyz="0 0 0" />
@@ -105,32 +25,7 @@
             </geometry>
         </collision>
     </link>
-
-    <link name="cf2_down">
-        <intertial>
-            <origin rpy="0 0 0" xyz="0.0 0.0 0.0" />
-            <mass value="0.0" />
-            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
-        </intertial>
-    </link>
-
-    <link name="cf2_mid">
-        <intertial>
-            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
-            <mass value="0.0" />
-            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
-        </intertial>
-    </link>
-
-    <link name="cf2_hook">
-        <intertial>
-            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
-            <mass value="0.0" />
-            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
-        </intertial>
-    </link>
-
-    <!-- 12 -->
+    
     <link name="cf2">
         <inertial>
             <origin rpy="0 0 0" xyz="0 0 0" />
@@ -155,6 +50,185 @@
             </geometry>
         </collision>
     </link>
+    
+    <link name="obj">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <mass value="0.01" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <geometry>
+                <sphere radius=".01" />
+            </geometry>
+        </collision>
+        <visual>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <geometry>
+                <sphere radius=".01" />
+            </geometry>
+            <material name="red">
+                <color rgba="1.0 0.0 0.0 1.0" />
+            </material>
+        </visual>
+    </link>
+
+    <link name="obj_left">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+
+    <link name="obj_left_up">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+        <visual>
+            <origin xyz="0.075 0 0.075" rpy="0 0 0" />
+            <geometry>
+                <cylinder length="0.21" radius="0.0001" />
+            </geometry>
+            <material name="blue">
+                <color rgba="0.0 0.0 1.0 1.0" />
+            </material>
+        </visual>
+    </link>
+
+    <link name="obj_right">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+
+    <link name="obj_right_up">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+        <!-- <collision>
+            <origin xyz="0 0 0" rpy="0 0 0" />
+            <geometry>
+                <cylinder length="0.1" radius="0.0001" />
+            </geometry>
+        </collision> -->
+        <visual>
+            <origin xyz="-0.075 0 0.075" rpy="0 0 0" />
+            <geometry>
+                <cylinder length="0.21" radius="0.0001" />
+            </geometry>
+            <material name="blue">
+                <color rgba="0.0 0.0 1.0 1.0" />
+            </material>
+        </visual>
+    </link>
+    
+    <link name="cf1_down">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0.0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+
+    <link name="cf1_mid">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0.0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+
+    <link name="cf1_hook">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+
+    <!-- 8 -->
+    <!-- <link name="cf1">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <mass value="0.027" />
+            <inertia ixx="1.7e-5" ixy="0.0" ixz="0.0" iyy="1.7e-5" iyz="0.0" izz="2.98e-5" />
+        </inertial>
+
+        <visual>
+            <origin rpy="0 0 55" xyz="0 0 0" />
+            <geometry>
+                <mesh filename="./cf2.dae" scale=" 1 1 1" />
+            </geometry>
+            <material name="grey">
+                <color rgba=".5 .5 .5 1" />
+            </material>
+        </visual>
+
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <cylinder radius=".06" length=".025" />
+            </geometry>
+        </collision>
+    </link> -->
+
+    <link name="cf2_down">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0.0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+
+    <link name="cf2_mid">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+
+    <link name="cf2_hook">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0.0 0.0" />
+            <mass value="0.0" />
+            <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+        </inertial>
+    </link>
+
+    <!-- 12 -->
+    <!-- <link name="cf2">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <mass value="0.027" />
+            <inertia ixx="1.7e-5" ixy="0.0" ixz="0.0" iyy="1.7e-5" iyz="0.0" izz="2.98e-5" />
+        </inertial>
+
+        <visual>
+            <origin rpy="0 0 55" xyz="0 0 0" />
+            <geometry>
+                <mesh filename="./cf2.dae" scale=" 1 1 1" />
+            </geometry>
+            <material name="grey">
+                <color rgba=".5 .5 .5 1" />
+            </material>
+        </visual>
+
+        <collision>
+            <origin rpy="0 0 0" xyz="0 0 0" />
+            <geometry>
+                <cylinder radius=".06" length=".025" />
+            </geometry>
+        </collision>
+    </link> -->
 
     <joint name="obj_left_x" type="revolute">
         <axis xyz="1 0 0" />

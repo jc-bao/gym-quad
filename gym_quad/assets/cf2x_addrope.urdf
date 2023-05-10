@@ -159,7 +159,7 @@
     </link>
 
     <joint name="joint3" type="revolute">
-        <axis xyz="1 1 0" />
+        <axis xyz="0 1 0" />
         <dynamics damping="0.0" friction="0.0" />
         <limit lower="-10000" upper="10000" effort="1000.0" velocity="1000.0" />
         <origin xyz="0.0 0.0 -0.05" rpy="0 0 0" />
